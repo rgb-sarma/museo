@@ -1,0 +1,51 @@
+# --- Python / backend ---
+backend/.venv/
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Secrets
+backend/.env
+.env
+*.env
+!*.env.example
+
+# Local SQLite databases
+backend/*.db
+*.db-journal
+*.sqlite3
+
+# --- Node / frontend ---
+app/node_modules/
+node_modules/
+app/dist/
+app/android/
+app/ios/
+app/www/
+app/.vite/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local API endpoint override (device/emulator)
+app/.env.local
+app/.env.*.local
+
+# Test / coverage output
+coverage/
+app/coverage/
+app/tests/e2e/videos/
+app/tests/e2e/screenshots/
+cypress/videos/
+cypress/screenshots/
+
+# --- Editors / OS ---
+.DS_Store
+Thumbs.db
+*.swp
+.idea/

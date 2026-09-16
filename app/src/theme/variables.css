@@ -1,0 +1,210 @@
+/* Museo design tokens — taken from the Museo.dc.html prototype. */
+
+:root {
+  --museo-ember: #d44e27;
+  --museo-ember-dim: #bcae9a;
+  --museo-ink: #211c16;
+  --museo-dark: #221c16;
+  --museo-dark-2: #2b2419;
+  --museo-dark-3: #2f281f;
+  --museo-dark-line: #3a3127;
+  --museo-dark-line-2: #4a4136;
+  --museo-cream: #f2ebdd;
+  --museo-surface: #ece5d7;
+  --museo-card: #ffffff;
+  --museo-card-alt: #faf6ef;
+  --museo-line: #ddd3c2;
+  --museo-line-soft: #eee5d6;
+  --museo-muted: #7a7264;
+  --museo-muted-2: #9a8f7c;
+  --museo-muted-dark: #8c8270;
+  --museo-muted-dark-2: #b3a78f;
+  --museo-body: #5f584b;
+  --museo-body-2: #5a5345;
+  --museo-star-empty: #cfc6b4;
+  --museo-open: #3f8a57;
+  --museo-open-bg: #e3f0e6;
+
+  --museo-radius: 4px;
+  --museo-radius-sm: 3px;
+  --museo-border: 1.5px;
+
+  --museo-display: 'Space Grotesk', system-ui, sans-serif;
+  --museo-text: 'DM Sans', system-ui, sans-serif;
+
+  /* Ionic surface mapping so its chrome matches the design rather than fighting it. */
+  --ion-background-color: var(--museo-surface);
+  --ion-text-color: var(--museo-ink);
+  --ion-font-family: var(--museo-text);
+  --ion-color-primary: var(--museo-ember);
+  --ion-color-primary-rgb: 212, 78, 39;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-shade: #bb4522;
+  --ion-color-primary-tint: #d8603d;
+}
+
+html,
+body {
+  background: var(--museo-surface);
+  font-family: var(--museo-text);
+}
+
+ion-content {
+  --background: var(--museo-surface);
+}
+
+/* The design has no visible scrollbars anywhere. */
+.mscroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.mscroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.msym {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+/* Shared primitives, repeated verbatim across most screens in the prototype. */
+.museo-field-label {
+  font: 600 10px var(--museo-text);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--museo-muted-2);
+  margin-bottom: 6px;
+}
+
+.museo-section-title {
+  font: 700 14px var(--museo-display);
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: var(--museo-ink);
+}
+
+.museo-rule {
+  height: var(--museo-border);
+  background: var(--museo-line);
+  margin: 18px 0;
+}
+
+.museo-card {
+  border: var(--museo-border) solid var(--museo-line);
+  border-radius: var(--museo-radius);
+  background: var(--museo-card);
+}
+
+.museo-btn {
+  width: 100%;
+  height: 50px;
+  border: none;
+  border-radius: var(--museo-radius);
+  background: var(--museo-ember);
+  color: #fff;
+  font: 700 13px var(--museo-text);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.museo-btn:disabled {
+  background: var(--museo-ember-dim);
+  cursor: default;
+}
+
+.museo-btn-outline {
+  width: 100%;
+  height: 48px;
+  border-radius: var(--museo-radius);
+  border: var(--museo-border) solid var(--museo-ink);
+  background: transparent;
+  color: var(--museo-ink);
+  font: 700 13px var(--museo-text);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.museo-input {
+  width: 100%;
+  height: 46px;
+  border-radius: var(--museo-radius);
+  border: var(--museo-border) solid var(--museo-line);
+  background: var(--museo-card);
+  padding: 0 14px;
+  font: 500 14px var(--museo-text);
+  color: var(--museo-ink);
+  outline: none;
+}
+
+/* Dark variant used by Login / Register. */
+.museo-input-dark {
+  width: 100%;
+  height: 48px;
+  border-radius: var(--museo-radius);
+  border: var(--museo-border) solid var(--museo-dark-line);
+  background: var(--museo-dark-2);
+  color: var(--museo-cream);
+  padding: 0 14px;
+  font: 500 14px var(--museo-text);
+  outline: none;
+}
+.museo-input-dark::placeholder {
+  color: var(--museo-muted-dark);
+}
+
+.museo-topbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  padding: 14px 16px 8px;
+}
+.museo-topbar-title {
+  flex: 1;
+  text-align: center;
+  font: 700 15px var(--museo-display);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--museo-ink);
+  margin-right: 36px;
+}
+.museo-iconbtn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--museo-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  color: var(--museo-ink);
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.museo-footer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  padding-bottom: calc(12px + var(--ion-safe-area-bottom, 0px));
+  border-top: var(--museo-border) solid var(--museo-line);
+  background: var(--museo-surface);
+}
