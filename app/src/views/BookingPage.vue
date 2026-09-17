@@ -32,12 +32,13 @@
               :key="d.iso"
               type="button"
               class="date"
-              :class="{ on: bookings.draft.date === d.iso }"
+              :class="{ on: bookings.draft.date === d.iso, closed: d.closed }"
+              :disabled="d.closed"
               @click="bookings.patchDraft({ date: d.iso })"
             >
               <div class="dow">{{ d.dow }}</div>
               <div class="day">{{ d.day }}</div>
-              <div class="mon">{{ d.mon }}</div>
+              <div class="mon">{{ d.closed ? "shut" : d.mon }}</div>
             </button>
           </div>
 
@@ -93,7 +94,7 @@
           <button
             class="museo-btn continue"
             type="button"
-            :disabled="!bookings.draft.slot"
+            :disabled="!bookings.draft.slot || dateClosed"
             @click="router.push(`/museum/${id}/pay`)"
           >
             {{ bookings.draft.slot ? "Continue" : "Pick a time" }}
@@ -106,7 +107,7 @@
 
 <script setup lang="ts">
 import { IonContent, IonPage } from "@ionic/vue";
-import { computed, onMounted } from "vue";
+import { computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 import MuseumImage from "@/components/MuseumImage.vue";
@@ -123,10 +124,28 @@ const id = computed(() => Number(route.params.id));
 const m = computed(() =>
   museums.detail?.id === id.value ? museums.detail : null,
 );
-const dateChips = buildDateChips(6);
+// the museum loads after this view mounts, so the closed days resolve late
+const dateChips = computed(() =>
+  buildDateChips(6, m.value?.opening_hours ?? null),
+);
+const dateClosed = computed(
+  () => !!dateChips.value.find((d) => d.iso === bookings.draft.date)?.closed,
+);
 
 const total = computed(() =>
   m.value ? m.value.admission_fee * bookings.draft.qty : 0,
+);
+
+// today is the default pick, so a museum shut today needs the selection moved on.
+// watching the flag rather than the chips also covers the draft being reset below.
+watch(
+  dateClosed,
+  (closed) => {
+    if (!closed) return;
+    const open = dateChips.value.find((d) => !d.closed);
+    if (open) bookings.patchDraft({ date: open.iso });
+  },
+  { immediate: true },
 );
 
 onMounted(() => {
@@ -216,6 +235,12 @@ onMounted(() => {
   border-color: var(--museo-ink);
   background: var(--museo-ink);
   color: var(--museo-cream);
+}
+.date.closed {
+  border-style: dashed;
+  background: var(--museo-card-alt);
+  color: var(--museo-muted-2);
+  cursor: not-allowed;
 }
 .dow {
   font: 600 10px var(--museo-text);

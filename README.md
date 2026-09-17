@@ -3,8 +3,6 @@
 Museum discovery + ticketing app. Find museums in your city, browse exhibitions,
 book timed entry with mock payment, carry a QR ticket, and leave star ratings.
 
-Built from the `Museo.dc.html` Claude Design prototype in `bachelor-s-project-design/`.
-
 - **Frontend** — Ionic 8 + Vue 3 + Capacitor (Android target), Pinia, Vue Router, axios, `qrcode`
 - **Backend** — FastAPI + SQLModel + SQLite, JWT auth via `python-jose`, bcrypt password hashing
 
@@ -26,7 +24,8 @@ Swagger UI at http://localhost:8000/docs.
 cd app && npm run dev
 ```
 
-Opens on http://localhost:5173. Demo login is prefilled: `maja@example.com` / `museodemo`.
+Opens on http://localhost:5173. Browsing works signed out; the booking and review
+flows prompt for an account. Demo login is prefilled: `petar@example.com` / `museodemo`.
 
 ### On an Android device or emulator
 
@@ -44,7 +43,7 @@ and bind uvicorn to all interfaces with `--host 0.0.0.0`.
 backend/app/
   main.py          FastAPI app, CORS, router wiring
   database.py      SQLite engine + session dependency
-  models.py        users, museums, exibitions, bookings, reviews
+  models.py        users, museums, Exhibitions, bookings, reviews
   schemas.py       request/response shapes
   auth.py          password hashing, JWT, get_current_user
   seed.py          demo data — 16 museums across 3 cities
@@ -61,22 +60,22 @@ app/src/
 
 ## API
 
-| Method | Path | Auth | Purpose |
-|---|---|:-:|---|
-| POST | `/auth/register` | | Create account, return JWT |
-| POST | `/auth/login` | | Return JWT |
-| GET | `/auth/me` | ● | Current user |
-| GET | `/museums` | | List; `city`, `category`, `min_rating`, `q`, `sort` |
-| GET | `/museums/{id}` | | Detail with exhibitions + aggregated rating |
-| GET | `/museums/{id}/reviews` | | Reviews for a museum |
-| POST | `/museums/{id}/reviews` | ● | Add or update your review |
-| GET | `/reviews/me` | ● | Your reviews (Profile screen) |
-| GET | `/categories` | | Category list for filters |
-| GET | `/bookings/slots` | | Available time slots |
-| POST | `/bookings` | ● | Create a booking |
-| GET | `/bookings` | ● | Your bookings; `when=upcoming\|past` |
-| GET | `/bookings/{id}` | ● | Single booking, for the ticket |
-| PATCH | `/bookings/{id}/cancel` | ● | Cancel an upcoming booking |
+| Method | Path                    | Auth | Purpose                                             |
+| ------ | ----------------------- | :--: | --------------------------------------------------- |
+| POST   | `/auth/register`        |      | Create account, return JWT                          |
+| POST   | `/auth/login`           |      | Return JWT                                          |
+| GET    | `/auth/me`              |  ●   | Current user                                        |
+| GET    | `/museums`              |      | List; `city`, `category`, `min_rating`, `q`, `sort` |
+| GET    | `/museums/{id}`         |      | Detail with exhibitions + aggregated rating         |
+| GET    | `/museums/{id}/reviews` |      | Reviews for a museum                                |
+| POST   | `/museums/{id}/reviews` |  ●   | Add or update your review                           |
+| GET    | `/reviews/me`           |  ●   | Your reviews (Profile screen)                       |
+| GET    | `/categories`           |      | Category list for filters                           |
+| GET    | `/bookings/slots`       |      | Available time slots                                |
+| POST   | `/bookings`             |  ●   | Create a booking                                    |
+| GET    | `/bookings`             |  ●   | Your bookings; `when=upcoming\|past`                |
+| GET    | `/bookings/{id}`        |  ●   | Single booking, for the ticket                      |
+| PATCH  | `/bookings/{id}/cancel` |  ●   | Cancel an upcoming booking                          |
 
 ## Demo scope
 

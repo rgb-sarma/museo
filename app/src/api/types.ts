@@ -1,17 +1,17 @@
 export type Category =
-  | 'art'
-  | 'history'
-  | 'natural_history'
-  | 'science'
-  | 'nature'
-  | 'archeology'
-  | 'ethnographic'
-  | 'childrens'
-  | 'culture'
-  | 'specialty';
+  | "art"
+  | "history"
+  | "natural_history"
+  | "science"
+  | "nature"
+  | "archaeology"
+  | "ethnographic"
+  | "childrens"
+  | "culture"
+  | "specialty";
 
-export type ExhibitionType = 'temporary' | 'permanent' | 'special';
-export type BookingStatus = 'pending' | 'confirmed' | 'cancelled';
+export type ExhibitionType = "temporary" | "permanent" | "special";
+export type BookingStatus = "pending" | "confirmed" | "cancelled";
 
 export interface User {
   id: number;
@@ -87,5 +87,5 @@ export interface MuseumQuery {
   category?: Category;
   min_rating?: number;
   q?: string;
-  sort?: 'top_rated' | 'price' | 'name';
+  sort?: "top_rated" | "price" | "name";
 }

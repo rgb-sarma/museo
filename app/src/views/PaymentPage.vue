@@ -68,7 +68,7 @@
               <input
                 v-model="name"
                 class="museo-input"
-                :placeholder="auth.user?.full_name ?? 'Maja Jovanović'"
+                :placeholder="auth.user?.full_name ?? 'Petar Ilić'"
               />
             </div>
           </div>

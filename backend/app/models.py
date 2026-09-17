@@ -15,7 +15,7 @@ class User(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     email: str = Field(unique=True, index=True)
-    password: str
+    hashed_password: str
     full_name: str
     phone_number: str | None = None
     is_verified: bool = Field(default=True)
@@ -30,14 +30,14 @@ class Category(str, Enum):
     NATURAL_HISTORY = "natural_history"
     SCIENCE = "science"
     NATURE = "nature"
-    ARCHAEOLOGY = "archeology"
+    ARCHAEOLOGY = "archaeology"
     ETHNOGRAPHIC = "ethnographic"
     CHILDRENS = "childrens"
     CULTURE = "culture"
     SPECIALTY = "specialty"
 
 
-class ExibitType(str, Enum):
+class ExhibitType(str, Enum):
     TEMPORARY = "temporary"
     PERMANENT = "permanent"
     SPECIAL = "special"
@@ -66,12 +66,12 @@ class Museums(SQLModel, table=True):
     deleted_at: datetime | None = None
 
 
-class Exibitions(SQLModel, table=True):
+class Exhibitions(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     museum_id: int = Field(foreign_key="museums.id", index=True)
     title: str
     description: str
-    type: ExibitType
+    type: ExhibitType
     start_date: date
     end_date: date | None = None
     image_url: str

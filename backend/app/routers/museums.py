@@ -4,7 +4,7 @@ from sqlmodel import Session, select
 
 from ..auth import get_current_user
 from ..database import get_session
-from ..models import Category, Exibitions, Museums, Reviews, User
+from ..models import Category, Exhibitions, Museums, Reviews, User
 from ..schemas import (
     CategoryRead,
     ExhibitionRead,
@@ -120,9 +120,9 @@ def get_museum(museum_id: int, session: Session = Depends(get_session)) -> Museu
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Museum not found")
 
     exhibitions = session.exec(
-        select(Exibitions)
-        .where(Exibitions.museum_id == museum_id)
-        .order_by(Exibitions.start_date.desc())
+        select(Exhibitions)
+        .where(Exhibitions.museum_id == museum_id)
+        .order_by(Exhibitions.start_date.desc())
     ).all()
 
     base = to_read(museum, rating_index(session))

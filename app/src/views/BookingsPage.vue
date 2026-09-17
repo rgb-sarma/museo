@@ -4,7 +4,7 @@
       <div class="screen">
         <div class="head">
           <h1 class="title">Bookings</h1>
-          <div class="tabs">
+          <div v-if="auth.isAuthenticated" class="tabs">
             <button
               v-for="t in TABS"
               :key="t.value"
@@ -19,7 +19,19 @@
         </div>
 
         <div class="list mscroll">
-          <StateBlock v-if="bookings.loading && !bookings.all.length" loading />
+          <StateBlock
+            v-if="!auth.isAuthenticated"
+            icon="lock"
+            title="Sign in for your tickets"
+            message="Bookings are tied to your account. Log in and yours show up here."
+            action-label="Log in"
+            @action="signIn"
+          />
+
+          <StateBlock
+            v-else-if="bookings.loading && !bookings.all.length"
+            loading
+          />
 
           <StateBlock
             v-else-if="bookings.error"
@@ -82,16 +94,18 @@
 
 <script setup lang="ts">
 import { IonContent, IonPage } from '@ionic/vue';
-import { onMounted } from 'vue';
+import { watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 import type { Booking } from '@/api';
 import MuseumImage from '@/components/MuseumImage.vue';
 import StateBlock from '@/components/StateBlock.vue';
+import { useAuthStore } from '@/stores/auth';
 import { useBookingsStore } from '@/stores/bookings';
 import { longDate } from '@/utils/format';
 
 const router = useRouter();
+const auth = useAuthStore();
 const bookings = useBookingsStore();
 
 const TABS = [
@@ -109,7 +123,19 @@ function statusClass(b: Booking): string {
   return bookings.tab === 'past' ? 'past' : 'confirmed';
 }
 
-onMounted(() => void bookings.load());
+function signIn() {
+  router.push({ path: '/login', query: { redirect: '/tabs/bookings' } });
+}
+
+// anonymous visitors would only get a 401 back. the tab stays mounted across a
+// login round trip, so this watches the flag rather than firing once on mount.
+watch(
+  () => auth.isAuthenticated,
+  (signedIn) => {
+    if (signedIn) void bookings.load();
+  },
+  { immediate: true },
+);
 </script>
 
 <style scoped>

@@ -45,8 +45,18 @@
 
           <p class="switch">
             New here?
-            <span @click="router.push('/register')">Create an account</span>
+            <span @click="router.push({ path: '/register', query: route.query })"
+              >Create an account</span
+            >
           </p>
+
+          <button
+            class="browse"
+            type="button"
+            @click="router.replace('/tabs/discover')"
+          >
+            Browse without an account
+          </button>
         </div>
       </div>
     </ion-content>
@@ -55,21 +65,29 @@
 
 <script setup lang="ts">
 import { IonContent, IonPage } from "@ionic/vue";
-import { ref } from "vue";
-import { useRouter } from "vue-router";
+import { computed, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 import { useAuthStore } from "@/stores/auth";
 
+const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
 
 // prefilled with the seeded demo account
-const email = ref("maja@example.com");
+const email = ref("petar@example.com");
 const password = ref("museodemo");
+
+// where the guard turned the user away from, so login resumes that action
+const redirect = computed(() =>
+  typeof route.query.redirect === "string"
+    ? route.query.redirect
+    : "/tabs/discover",
+);
 
 async function submit() {
   if (await auth.login(email.value, password.value)) {
-    router.replace("/tabs/discover");
+    router.replace(redirect.value);
   }
 }
 </script>
@@ -156,5 +174,18 @@ async function submit() {
   cursor: pointer;
   border-bottom: var(--museo-border) solid var(--museo-ember);
   padding-bottom: 1px;
+}
+
+.browse {
+  display: block;
+  margin: 16px auto 0;
+  background: none;
+  border: none;
+  padding: 6px 0;
+  cursor: pointer;
+  font: 700 11px var(--museo-text);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--museo-muted-dark-2);
 }
 </style>

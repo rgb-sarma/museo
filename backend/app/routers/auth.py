@@ -24,7 +24,7 @@ def register(body: RegisterRequest, session: Session = Depends(get_session)) -> 
 
     user = User(
         email=body.email,
-        password=hash_password(body.password),
+        hashed_password=hash_password(body.password),
         full_name=body.full_name,
         phone_number=body.phone_number,
         is_verified=True,  # verification is mocked for the demo
@@ -38,7 +38,7 @@ def register(body: RegisterRequest, session: Session = Depends(get_session)) -> 
 @router.post("/login", response_model=TokenResponse)
 def login(body: LoginRequest, session: Session = Depends(get_session)) -> TokenResponse:
     user = session.exec(select(User).where(User.email == body.email)).first()
-    if user is None or not verify_password(body.password, user.password):
+    if user is None or not verify_password(body.password, user.hashed_password):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Incorrect email or password")
     return _token_for(user)
 

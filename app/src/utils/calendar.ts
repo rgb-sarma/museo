@@ -1,7 +1,12 @@
+import dayjs, { type Dayjs } from "dayjs";
+import utc from "dayjs/plugin/utc";
+
 import type { Booking } from "@/api";
 
-function icsStamp(date: Date): string {
-  return `${date.toISOString().replace(/[-:]/g, "").split(".")[0]}Z`;
+dayjs.extend(utc);
+
+function icsStamp(date: Dayjs | Date): string {
+  return `${dayjs(date).utc().format("YYYYMMDDTHHmmss")}Z`;
 }
 
 function escape(text: string): string {
@@ -13,10 +18,8 @@ function escape(text: string): string {
  * what is fundamentally twelve lines of text.
  */
 export function bookingToICS(booking: Booking): string {
-  const [hh, mm] = booking.time_slot.split(":").map(Number);
-  const [y, m, d] = booking.visit_date.split("-").map(Number);
-  const start = new Date(y, m - 1, d, hh, mm);
-  const end = new Date(start.getTime() + 2 * 60 * 60 * 1000); // assume a two-hour visit
+  const start = dayjs(`${booking.visit_date}T${booking.time_slot}`);
+  const end = start.add(2, "hour"); // assume a two-hour visit
 
   return [
     "BEGIN:VCALENDAR",

@@ -12,7 +12,17 @@
                 <span class="msym chev">expand_more</span>
               </button>
             </div>
-            <div class="avatar">{{ auth.initials }}</div>
+            <div v-if="auth.isAuthenticated" class="avatar">
+              {{ auth.initials }}
+            </div>
+            <button
+              v-else
+              class="signin"
+              type="button"
+              @click="router.push('/login')"
+            >
+              Log in
+            </button>
           </div>
 
           <button
@@ -171,6 +181,20 @@ async function pickCity() {
   font: 700 15px var(--museo-display);
   color: #fff;
   flex: 0 0 auto;
+}
+
+.signin {
+  flex: 0 0 auto;
+  height: 40px;
+  padding: 0 14px;
+  border: var(--museo-border) solid var(--museo-dark-line-2);
+  border-radius: var(--museo-radius);
+  background: none;
+  cursor: pointer;
+  font: 700 11px var(--museo-text);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--museo-cream);
 }
 
 .searchbar {

@@ -2,7 +2,7 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, EmailStr, Field
 
-from .models import BookingStatus, Category, ExibitType
+from .models import BookingStatus, Category, ExhibitType
 
 # ---------------------------------------------------------------- auth
 
@@ -41,7 +41,7 @@ class ExhibitionRead(BaseModel):
     id: int
     title: str
     description: str
-    type: ExibitType
+    type: ExhibitType
     start_date: date
     end_date: date | None
     image_url: str

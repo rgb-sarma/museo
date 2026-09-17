@@ -14,8 +14,8 @@ from .models import (
     Bookings,
     BookingStatus,
     Category,
-    Exibitions,
-    ExibitType,
+    Exhibitions,
+    ExhibitType,
     Museums,
     Reviews,
     User,
@@ -114,82 +114,82 @@ MUSEUMS = [
 # museum name -> [(title, type, months_from_today_start, months_duration, description)]
 EXHIBITIONS = {
     "National Museum of Serbia": [
-        ("Masters of the Interwar", ExibitType.TEMPORARY, -1, 3,
+        ("Masters of the Interwar", ExhibitType.TEMPORARY, -1, 3,
          "Painting between the wars, when Belgrade's studios looked to Paris."),
-        ("The Permanent Galleries", ExibitType.PERMANENT, -60, None,
+        ("The Permanent Galleries", ExhibitType.PERMANENT, -60, None,
          "Antiquity through the 20th century across three restored floors."),
     ],
     "Museum of Contemporary Art": [
-        ("Forms of the New", ExibitType.TEMPORARY, 0, 2,
+        ("Forms of the New", ExhibitType.TEMPORARY, 0, 2,
          "Sculpture and installation from the museum's post-1960 holdings."),
     ],
     "Nikola Tesla Museum": [
-        ("Resonance: Tesla's Coils", ExibitType.TEMPORARY, -1, 2,
+        ("Resonance: Tesla's Coils", ExhibitType.TEMPORARY, -1, 2,
          "The coil demonstrations, with the original patents alongside."),
-        ("The Inventor's Legacy", ExibitType.PERMANENT, -60, None,
+        ("The Inventor's Legacy", ExhibitType.PERMANENT, -60, None,
          "Tesla's urn, personal effects and working reconstructions."),
     ],
     "Museum of Yugoslavia": [
-        ("Relay of Youth", ExibitType.TEMPORARY, -2, 6,
+        ("Relay of Youth", ExhibitType.TEMPORARY, -2, 6,
          "The batons carried to Tito each year, and the ritual around them."),
     ],
     "Natural History Museum": [
-        ("Ice Age Balkans", ExibitType.TEMPORARY, 0, 3,
+        ("Ice Age Balkans", ExhibitType.TEMPORARY, 0, 3,
          "Cave bears, mammoth finds and the peninsula's glacial refugia."),
     ],
     "Ethnographic Museum": [
-        ("Threads of the Village", ExibitType.PERMANENT, -60, None,
+        ("Threads of the Village", ExhibitType.PERMANENT, -60, None,
          "Costume and textile from every Serbian region."),
     ],
     "Museum of Vojvodina": [
-        ("Roman Danube", ExibitType.TEMPORARY, -1, 4,
+        ("Roman Danube", ExhibitType.TEMPORARY, -1, 4,
          "Frontier archaeology from the limes along the river."),
     ],
     "Gallery of Matica Srpska": [
-        ("Paja Jovanović Revisited", ExibitType.TEMPORARY, 0, 3,
+        ("Paja Jovanović Revisited", ExhibitType.TEMPORARY, 0, 3,
          "The large historical canvases, newly conserved."),
-        ("Serbian Painting 1750–1950", ExibitType.PERMANENT, -60, None,
+        ("Serbian Painting 1750–1950", ExhibitType.PERMANENT, -60, None,
          "The permanent chronological hang."),
     ],
     "Petrovaradin Fortress Museum": [
-        ("Under the Clock", ExibitType.TEMPORARY, -2, 5,
+        ("Under the Clock", ExhibitType.TEMPORARY, -2, 5,
          "Twenty kilometres of counter-mine tunnels, mapped and lit."),
     ],
     "Museum of Contemporary Art Vojvodina": [
-        ("Neo-Avant-Garde Novi Sad", ExibitType.TEMPORARY, 0, 2,
+        ("Neo-Avant-Garde Novi Sad", ExhibitType.TEMPORARY, 0, 2,
          "Performance documentation and samizdat from the 1970s."),
     ],
     "Pavle Beljanski Memorial Collection": [
-        ("The Collector's Eye", ExibitType.PERMANENT, -60, None,
+        ("The Collector's Eye", ExhibitType.PERMANENT, -60, None,
          "Fifty works, hung as Beljanski left them."),
     ],
     "Kunsthistorisches Museum": [
-        ("Bruegel in Detail", ExibitType.TEMPORARY, -1, 3,
+        ("Bruegel in Detail", ExhibitType.TEMPORARY, -1, 3,
          "Infrared and macro photography of the twelve panels."),
-        ("The Picture Gallery", ExibitType.PERMANENT, -60, None,
+        ("The Picture Gallery", ExhibitType.PERMANENT, -60, None,
          "Titian, Velázquez, Rubens and the Habsburg core."),
     ],
     "Naturhistorisches Museum": [
-        ("Meteorites Reopened", ExibitType.TEMPORARY, 0, 4,
+        ("Meteorites Reopened", ExhibitType.TEMPORARY, 0, 4,
          "The world's oldest meteorite display, rebuilt."),
     ],
     "Albertina": [
-        ("Dürer on Paper", ExibitType.TEMPORARY, -1, 2,
+        ("Dürer on Paper", ExhibitType.TEMPORARY, -1, 2,
          "Watercolours and drawings shown in rotation for conservation."),
     ],
     "Technisches Museum Wien": [
-        ("Power and Progress", ExibitType.PERMANENT, -60, None,
+        ("Power and Progress", ExhibitType.PERMANENT, -60, None,
          "Heavy machinery from the imperial industrial age."),
     ],
     "Weltmuseum Wien": [
-        ("Provenance in Question", ExibitType.TEMPORARY, 0, 5,
+        ("Provenance in Question", ExhibitType.TEMPORARY, 0, 5,
          "Twenty objects and the open research into how they arrived."),
     ],
 }
 
 # (full_name, email) — demo reviewers. The first is the account you log in as.
 USERS = [
-    ("Maja Jovanović", "maja@example.com"),
+    ("Petar Ilić", "petar@example.com"),
     ("Ana Petrović", "ana@example.com"),
     ("Marko Ilić", "marko@example.com"),
     ("Jelena Kostić", "jelena@example.com"),
@@ -267,14 +267,14 @@ def seed() -> None:
 
     with Session(engine) as session:
         # Wipe children first so the FKs stay satisfied.
-        for model in (Reviews, Bookings, Exibitions, Museums, User):
+        for model in (Reviews, Bookings, Exhibitions, Museums, User):
             session.exec(delete(model))
         session.commit()
 
         users = [
             User(
                 email=email,
-                password=hash_password("museodemo"),
+                hashed_password=hash_password("museodemo"),
                 full_name=name,
                 is_verified=True,
             )
@@ -310,7 +310,7 @@ def seed() -> None:
             for title, kind, start_offset, duration, description in shows:
                 start = today + months(start_offset)
                 session.add(
-                    Exibitions(
+                    Exhibitions(
                         museum_id=museums[museum_name].id,
                         title=title,
                         description=description,
@@ -332,13 +332,14 @@ def seed() -> None:
                     )
                 )
 
-        # One past and one upcoming booking for Maja, so Bookings has both tabs populated.
-        maja = users[0]
+        # One past and one upcoming booking for the demo user, so Bookings has both
+        # tabs populated.
+        demo_user = users[0]
         tesla = museums["Nikola Tesla Museum"]
         national = museums["National Museum of Serbia"]
         session.add_all([
             Bookings(
-                user_id=maja.id,
+                user_id=demo_user.id,
                 museum_id=tesla.id,
                 visit_date=today + timedelta(days=9),
                 time_slot="11:00",
@@ -348,7 +349,7 @@ def seed() -> None:
                 reference="TSL9F3C21A4",
             ),
             Bookings(
-                user_id=maja.id,
+                user_id=demo_user.id,
                 museum_id=national.id,
                 visit_date=today - timedelta(days=41),
                 time_slot="14:00",
@@ -364,13 +365,13 @@ def seed() -> None:
         counts = {
             "users": len(users),
             "museums": len(museums),
-            "exhibitions": len(session.exec(select(Exibitions)).all()),
+            "exhibitions": len(session.exec(select(Exhibitions)).all()),
             "reviews": len(session.exec(select(Reviews)).all()),
             "bookings": len(session.exec(select(Bookings)).all()),
         }
 
     print("Seeded:", ", ".join(f"{v} {k}" for k, v in counts.items()))
-    print("Demo login: maja@example.com / museodemo")
+    print("Demo login: petar@example.com / museodemo")
 
 
 if __name__ == "__main__":

@@ -18,7 +18,7 @@
               <input
                 v-model.trim="fullName"
                 class="museo-input-dark"
-                placeholder="Maja Jovanović"
+                placeholder="Petar Ilić"
                 autocomplete="name"
                 required
               />
@@ -67,11 +67,12 @@
 
 <script setup lang="ts">
 import { IonContent, IonPage } from '@ionic/vue';
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 import { useAuthStore } from '@/stores/auth';
 
+const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
 
@@ -79,9 +80,14 @@ const fullName = ref('');
 const email = ref('');
 const password = ref('');
 
+// carried over from /login so registering resumes the interrupted action too
+const redirect = computed(() =>
+  typeof route.query.redirect === 'string' ? route.query.redirect : '/tabs/discover',
+);
+
 async function submit() {
   if (await auth.register(fullName.value, email.value, password.value)) {
-    router.replace('/tabs/discover');
+    router.replace(redirect.value);
   }
 }
 </script>

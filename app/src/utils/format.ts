@@ -1,20 +1,10 @@
+import dayjs from "dayjs";
+
 import type { Category, Museum } from "@/api";
 
-const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const MON = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
+// 0 = Sunday, matching dayjs().day().
+const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DAY_INDEX = new Map(DAY_NAMES.map((d, i) => [d.toLowerCase(), i]));
 
 export const CATEGORY_LABELS: Record<Category, string> = {
   art: "Art",
@@ -22,7 +12,7 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   natural_history: "Natural history",
   science: "Science",
   nature: "Nature",
-  archeology: "Archaeology",
+  archaeology: "Archaeology",
   ethnographic: "Ethnographic",
   childrens: "Children's",
   culture: "Culture",
@@ -48,25 +38,22 @@ export function ratingStr(avg: number): string {
 
 // ISO yyyy-mm-dd in local time rather than UTC.
 export function toISODate(d: Date): string {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  return dayjs(d).format("YYYY-MM-DD");
 }
 
+// dayjs parses a bare yyyy-mm-dd at local midnight, so this stays off-by-one safe.
 export function parseISODate(iso: string): Date {
-  const [y, m, d] = iso.split("-").map(Number);
-  return new Date(y, m - 1, d);
+  return dayjs(iso).toDate();
 }
 
 // "Fri 12 Jun 2026"
 export function longDate(iso: string): string {
-  const d = parseISODate(iso);
-  return `${DOW[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`;
+  return dayjs(iso).format("ddd D MMM YYYY");
 }
 
 // "12 Jun 2026"
 export function shortDate(iso: string): string {
-  const d = parseISODate(iso);
-  return `${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`;
+  return dayjs(iso).format("D MMM YYYY");
 }
 
 export interface DateChip {
@@ -74,27 +61,33 @@ export interface DateChip {
   dow: string;
   day: number;
   mon: string;
+  /** the museum is shut that weekday -> the chip is not selectable. */
+  closed: boolean;
 }
 
 // the horizontal date strip on the booking screen: today plus the next `count - 1` days.
-export function buildDateChips(count = 6, from = new Date()): DateChip[] {
-  const base = new Date(from.getFullYear(), from.getMonth(), from.getDate());
+export function buildDateChips(
+  count = 6,
+  hours: string | null = null,
+  from = new Date(),
+): DateChip[] {
+  const openDays = hours ? parseOpeningHours(hours)?.days : undefined;
+  const base = dayjs(from).startOf("day");
   return Array.from({ length: count }, (_, i) => {
-    const d = new Date(base);
-    d.setDate(base.getDate() + i);
+    const d = base.add(i, "day");
     return {
-      iso: toISODate(d),
-      dow: DOW[d.getDay()],
-      day: d.getDate(),
-      mon: MON[d.getMonth()],
+      iso: d.format("YYYY-MM-DD"),
+      dow: d.format("ddd"),
+      day: d.date(),
+      mon: d.format("MMM"),
+      closed: openDays ? !openDays.includes(d.day()) : false,
     };
   });
 }
 
 // "2w ago" / "3mo ago" / "just now"
 export function relativeDate(iso: string): string {
-  const then = new Date(iso).getTime();
-  const days = Math.floor((Date.now() - then) / 86_400_000);
+  const days = dayjs().diff(dayjs(iso), "day");
   if (days < 1) return "just now";
   if (days < 7) return `${days}d ago`;
   if (days < 30) return `${Math.floor(days / 7)}w ago`;
@@ -105,8 +98,7 @@ export function relativeDate(iso: string): string {
 // "Until 30 Jun" for temporary shows, "Permanent" otherwise.
 export function exhibitionDates(type: string, endDate: string | null): string {
   if (type === "permanent" || !endDate) return "Permanent";
-  const d = parseISODate(endDate);
-  return `Until ${d.getDate()} ${MON[d.getMonth()]}`;
+  return `Until ${dayjs(endDate).format("D MMM")}`;
 }
 
 // straight-line distance in km.
@@ -135,22 +127,90 @@ export function distanceLabel(
   return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
 }
 
-// whether the museum is open right now, parsed from strings like "Tue–Sun · 10:00–18:00".
-export function openState(hours: string): { open: boolean; label: string } {
-  const match = hours.match(/(\d{2}):(\d{2})[–-](\d{2}):(\d{2})/);
-  if (!match) return { open: false, label: hours };
+export interface OpeningHours {
+  /** weekday indices the museum is open, 0 = Sunday. */
+  days: number[];
+  /** minutes from midnight. */
+  opens: number;
+  closes: number;
+}
 
-  const [, oh, om, ch, cm] = match.map(Number) as unknown as number[];
-  const now = new Date();
-  const minutes = now.getHours() * 60 + now.getMinutes();
-  const open = minutes >= oh * 60 + om && minutes < ch * 60 + cm;
+/**
+ * opening hours are stored as a display string ("Tue–Sun · 10:00–18:00") and
+ * interpreted here at the presentation layer; a normalised per-weekday table
+ * would be the production shape.
+ */
+export function parseOpeningHours(hours: string): OpeningHours | null {
+  const time = hours.match(/(\d{2}):(\d{2})\s*[–—-]\s*(\d{2}):(\d{2})/);
+  if (!time) return null;
+  const [, oh, om, ch, cm] = time.map(Number) as unknown as number[];
+  return { days: parseDays(hours), opens: oh * 60 + om, closes: ch * 60 + cm };
+}
+
+// "Daily" -> every day; "Tue–Sun" -> Tue..Sun; "Wed–Mon" wraps past Sunday.
+function parseDays(hours: string): number[] {
+  const every = [0, 1, 2, 3, 4, 5, 6];
+  const dayPart = hours.split("·")[0].trim();
+  if (/daily|every day/i.test(dayPart)) return every;
+
+  const range = dayPart.match(/([A-Za-z]{3})[a-z]*\s*[–—-]\s*([A-Za-z]{3})[a-z]*/);
+  if (range) {
+    const from = DAY_INDEX.get(range[1].toLowerCase());
+    const to = DAY_INDEX.get(range[2].toLowerCase());
+    if (from !== undefined && to !== undefined) {
+      const days: number[] = [];
+      // walk forwards modulo 7 so ranges that cross Sunday still resolve
+      for (let i = from; ; i = (i + 1) % 7) {
+        days.push(i);
+        if (i === to) break;
+      }
+      return days;
+    }
+  }
+
+  const single = DAY_INDEX.get(dayPart.slice(0, 3).toLowerCase());
+  if (single !== undefined) return [single];
+  // unrecognised day part -> assume it is open every day rather than hide it
+  return every;
+}
+
+function hhmm(minutes: number): string {
   const pad = (n: number) => String(n).padStart(2, "0");
-  return {
-    open,
-    label: open
-      ? `Open · closes ${pad(ch)}:${pad(cm)}`
-      : `Closed · opens ${pad(oh)}:${pad(om)}`,
-  };
+  return `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`;
+}
+
+// whether the museum is open right now, from strings like "Tue–Sun · 10:00–18:00".
+export function openState(
+  hours: string,
+  now: Date = new Date(),
+): { open: boolean; label: string } {
+  const parsed = parseOpeningHours(hours);
+  if (!parsed) return { open: false, label: hours };
+
+  const d = dayjs(now);
+  const today = d.day();
+  const minutes = d.hour() * 60 + d.minute();
+
+  if (parsed.days.includes(today)) {
+    if (minutes < parsed.opens) {
+      return { open: false, label: `Closed · opens ${hhmm(parsed.opens)}` };
+    }
+    if (minutes < parsed.closes) {
+      return { open: true, label: `Open · closes ${hhmm(parsed.closes)}` };
+    }
+  }
+
+  // shut for the rest of today -> name the next day it opens
+  for (let step = 1; step <= 7; step++) {
+    const day = (today + step) % 7;
+    if (parsed.days.includes(day)) {
+      return {
+        open: false,
+        label: `Closed · opens ${DAY_NAMES[day]} ${hhmm(parsed.opens)}`,
+      };
+    }
+  }
+  return { open: false, label: hours };
 }
 
 /**

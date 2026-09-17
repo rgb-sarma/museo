@@ -38,19 +38,27 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/museum/:id/book",
     component: () => import("@/views/BookingPage.vue"),
+    meta: { requiresAuth: true },
   },
   {
     path: "/museum/:id/pay",
     component: () => import("@/views/PaymentPage.vue"),
+    meta: { requiresAuth: true },
   },
   {
     path: "/museum/:id/review",
     component: () => import("@/views/ReviewPage.vue"),
+    meta: { requiresAuth: true },
   },
-  { path: "/booking/:id", component: () => import("@/views/TicketPage.vue") },
+  {
+    path: "/booking/:id",
+    component: () => import("@/views/TicketPage.vue"),
+    meta: { requiresAuth: true },
+  },
   {
     path: "/booking/:id/success",
     component: () => import("@/views/SuccessPage.vue"),
+    meta: { requiresAuth: true },
   },
 ];
 
@@ -59,9 +67,13 @@ const router = createRouter({
   routes,
 });
 
+// browsing is open to everyone; only the booking and review flows need an account,
+// and they bounce through /login carrying where the user was headed.
 router.beforeEach((to) => {
   const auth = useAuthStore();
-  if (!to.meta.public && !auth.isAuthenticated) return "/login";
+  if (to.meta.requiresAuth && !auth.isAuthenticated) {
+    return { path: "/login", query: { redirect: to.fullPath } };
+  }
   // skip the auth screens if already signed in
   if (to.meta.public && auth.isAuthenticated) return "/tabs/discover";
   return true;

@@ -16,10 +16,14 @@ router = APIRouter(prefix="/bookings", tags=["bookings"])
 TIME_SLOTS = ["10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00"]
 
 
-def _read(booking: Bookings, museum: Museums, session: Session) -> BookingRead:
+def _read(
+    booking: Bookings,
+    museum: Museums,
+    ratings: dict[int, tuple[float, int]],
+) -> BookingRead:
     return BookingRead(
         **booking.model_dump(exclude={"user_id", "museum_id", "updated_at", "deleted_at"}),
-        museum=to_read(museum, rating_index(session)),
+        museum=to_read(museum, ratings),
     )
 
 
@@ -53,7 +57,7 @@ def create_booking(
     session.add(booking)
     session.commit()
     session.refresh(booking)
-    return _read(booking, museum, session)
+    return _read(booking, museum, rating_index(session))
 
 
 @router.get("", response_model=list[BookingRead])
@@ -75,7 +79,8 @@ def list_bookings(
     elif when == "past":
         rows = [r for r in rows if r[0].visit_date < today]
 
-    return [_read(b, m, session) for b, m in rows]
+    ratings = rating_index(session)
+    return [_read(b, m, ratings) for b, m in rows]
 
 
 @router.get("/{booking_id}", response_model=BookingRead)
@@ -88,7 +93,7 @@ def get_booking(
     if booking is None or booking.deleted_at is not None or booking.user_id != user.id:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Booking not found")
     museum = session.get(Museums, booking.museum_id)
-    return _read(booking, museum, session)
+    return _read(booking, museum, rating_index(session))
 
 
 @router.patch("/{booking_id}/cancel", response_model=BookingRead)
@@ -108,4 +113,4 @@ def cancel_booking(
     session.commit()
     session.refresh(booking)
     museum = session.get(Museums, booking.museum_id)
-    return _read(booking, museum, session)
+    return _read(booking, museum, rating_index(session))

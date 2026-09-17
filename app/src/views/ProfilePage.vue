@@ -3,55 +3,66 @@
     <ion-content :fullscreen="true" :scroll-y="false">
       <div class="screen">
         <div class="scroll mscroll">
-          <div class="identity">
-            <div class="avatar">{{ auth.initials }}</div>
-            <div>
-              <div class="name">{{ auth.user?.full_name }}</div>
-              <div class="email">{{ auth.user?.email }}</div>
-            </div>
-          </div>
+          <StateBlock
+            v-if="!auth.isAuthenticated"
+            icon="person"
+            title="You're browsing as a guest"
+            message="Log in to book visits, keep your tickets and leave reviews."
+            action-label="Log in or register"
+            @action="signIn"
+          />
 
-          <div class="stats">
-            <div class="stat">
-              <div class="stat-value">{{ bookings.all.length }}</div>
-              <div class="stat-label">Bookings</div>
-            </div>
-            <div class="stat">
-              <div class="stat-value">{{ myReviews.length }}</div>
-              <div class="stat-label">Reviews</div>
-            </div>
-          </div>
-
-          <div class="museo-section-title section">Your reviews</div>
-
-          <StateBlock v-if="loading" loading />
-
-          <div v-else-if="myReviews.length" class="reviews">
-            <button
-              v-for="r in myReviews"
-              :key="r.id"
-              type="button"
-              class="review"
-              @click="router.push(`/museum/${r.museum_id}`)"
-            >
-              <div class="review-head">
-                <span class="review-museum">{{ r.museum_name }}</span>
-                <span class="review-stars">
-                  <span class="full">{{ stars(r.rating).full }}</span>
-                  <span class="empty">{{ stars(r.rating).empty }}</span>
-                </span>
+          <template v-else>
+            <div class="identity">
+              <div class="avatar">{{ auth.initials }}</div>
+              <div>
+                <div class="name">{{ auth.user?.full_name }}</div>
+                <div class="email">{{ auth.user?.email }}</div>
               </div>
-              <p v-if="r.comment" class="review-text">{{ r.comment }}</p>
+            </div>
+
+            <div class="stats">
+              <div class="stat">
+                <div class="stat-value">{{ bookings.all.length }}</div>
+                <div class="stat-label">Bookings</div>
+              </div>
+              <div class="stat">
+                <div class="stat-value">{{ myReviews.length }}</div>
+                <div class="stat-label">Reviews</div>
+              </div>
+            </div>
+
+            <div class="museo-section-title section">Your reviews</div>
+
+            <StateBlock v-if="loading" loading />
+
+            <div v-else-if="myReviews.length" class="reviews">
+              <button
+                v-for="r in myReviews"
+                :key="r.id"
+                type="button"
+                class="review"
+                @click="router.push(`/museum/${r.museum_id}`)"
+              >
+                <div class="review-head">
+                  <span class="review-museum">{{ r.museum_name }}</span>
+                  <span class="review-stars">
+                    <span class="full">{{ stars(r.rating).full }}</span>
+                    <span class="empty">{{ stars(r.rating).empty }}</span>
+                  </span>
+                </div>
+                <p v-if="r.comment" class="review-text">{{ r.comment }}</p>
+              </button>
+            </div>
+
+            <div v-else class="no-reviews">
+              You haven't left a review yet. Open a museum to add one.
+            </div>
+
+            <button class="museo-btn-outline logout" type="button" @click="confirmLogout">
+              <span class="msym">logout</span>Log out
             </button>
-          </div>
-
-          <div v-else class="no-reviews">
-            You haven't left a review yet. Open a museum to add one.
-          </div>
-
-          <button class="museo-btn-outline logout" type="button" @click="confirmLogout">
-            <span class="msym">logout</span>Log out
-          </button>
+          </template>
         </div>
       </div>
     </ion-content>
@@ -60,7 +71,7 @@
 
 <script setup lang="ts">
 import { IonContent, IonPage, alertController } from '@ionic/vue';
-import { onMounted, ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 
 import { museumsApi, type Review } from '@/api';
@@ -76,16 +87,32 @@ const bookings = useBookingsStore();
 const myReviews = ref<Review[]>([]);
 const loading = ref(true);
 
-onMounted(async () => {
-  if (!bookings.all.length) void bookings.load();
-  try {
-    myReviews.value = await museumsApi.myReviews();
-  } catch {
-    myReviews.value = [];
-  } finally {
-    loading.value = false;
-  }
-});
+function signIn() {
+  router.push({ path: '/login', query: { redirect: '/tabs/profile' } });
+}
+
+// both calls need a token; the tab survives the login round trip, so load on the
+// flag rather than on mount
+watch(
+  () => auth.isAuthenticated,
+  async (signedIn) => {
+    if (!signedIn) {
+      myReviews.value = [];
+      loading.value = false;
+      return;
+    }
+    loading.value = true;
+    if (!bookings.all.length) void bookings.load();
+    try {
+      myReviews.value = await museumsApi.myReviews();
+    } catch {
+      myReviews.value = [];
+    } finally {
+      loading.value = false;
+    }
+  },
+  { immediate: true },
+);
 
 async function confirmLogout() {
   const alert = await alertController.create({
@@ -98,7 +125,8 @@ async function confirmLogout() {
         handler: () => {
           bookings.reset();
           auth.logout();
-          router.replace('/login');
+          // browsing stays open, so drop back into Discover rather than the login wall
+          router.replace('/tabs/discover');
         },
       },
     ],
